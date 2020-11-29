@@ -1,0 +1,21 @@
+﻿<Project>
+  <PropertyGroup>
+    <Authors>Maxim Shoshin</Authors>
+
+    <!-- Pack everything with embedded .pdb -->
+    <EmbedAllSources>true</EmbedAllSources>
+    <DebugType>embedded</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);CS1591;CS0618</WarningsNotAsErrors>
+    <NoWarn>1701;1702</NoWarn>
+
+    <LangVersion>9.0</LangVersion>
+    <Nullable>enable</Nullable>
+
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <GenerateErrorForMissingTargetingPacks>false</GenerateErrorForMissingTargetingPacks>
+  </PropertyGroup>
+
+</Project>

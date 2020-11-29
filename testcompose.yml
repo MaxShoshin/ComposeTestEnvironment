@@ -1,0 +1,17 @@
+﻿services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2017-latest
+    environment:
+      ACCEPT_EULA: Y
+      SA_PASSWORD: yourStrong(!)Password
+
+# Run tests
+  tests-all:
+    build:
+      context: .
+      dockerfile: dockerfile.tests
+    environment:
+      "UNDER_COMPOSE": "yes" # To detect that tests are working under docker-compose
+
+    command: 'dotnet test'
+
