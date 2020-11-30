@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace TestCompose
@@ -11,7 +11,7 @@ namespace TestCompose
         public abstract string FileName { get; }
 
         public virtual string ProjectName
-            => GetType().Assembly.FullName ?? throw new NotSupportedException($"Null is assembly full name is not supported ( typeof({GetType().Name}).Assembly.FullName )");
+            => GetType().Assembly?.GetName().Name ?? throw new NotSupportedException($"Null assembly is not supported (typeof({GetType().Name}).Assembly)");
 
         public virtual TimeSpan StartTimeout { get; } = TimeSpan.FromSeconds(40);
 
