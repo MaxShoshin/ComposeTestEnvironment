@@ -10,16 +10,25 @@ namespace TestCompose
     /// </summary>
     public sealed class TestFramework : XunitTestFramework
     {
-        private static DisposalTracker? disposables;
+        private static DisposalTracker? _disposables;
+        private static bool _initialized;
 
         public TestFramework(IMessageSink messageSink)
             : base(messageSink)
         {
+            _initialized = true;
         }
 
         public static void RegisterDisposable(IDisposable disposable)
         {
-            disposables!.Add(disposable);
+            if (!_initialized)
+            {
+                throw new InvalidOperationException(
+                    "Missing registration of TestFramework. You should add:" + Environment.NewLine +
+                    "[assembly: Xunit.TestFramework(\"TestCompose.TestFramework\", \"TestCompose\")]");
+            }
+
+            _disposables!.Add(disposable);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000", Justification = "Added to disposables collection")]
@@ -32,7 +41,7 @@ namespace TestCompose
             // This Dispose behavior will changed in the future versions of xUnit (v.3)
             var property = typeof(TestFrameworkDiscoverer).GetProperty("DisposalTracker", BindingFlags.Instance | BindingFlags.NonPublic)
                            ?? throw new InvalidOperationException("Cannot find property «DisposalTracker» on discoverer");
-            disposables = (DisposalTracker?)property.GetValue(discoverer)
+            _disposables = (DisposalTracker?)property.GetValue(discoverer)
                           ?? throw new InvalidOperationException("No disposal tracker found");
 
             return discoverer;
