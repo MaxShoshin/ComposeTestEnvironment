@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestCompose", "TestCompose\TestCompose.csproj", "{C18EC188-9A97-4F10-8512-26B702576BD4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ComposeTestEnvironment.xUnit", "ComposeTestEnvironment.xUnit\ComposeTestEnvironment.xUnit.csproj", "{C18EC188-9A97-4F10-8512-26B702576BD4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample", "Sample\Sample.csproj", "{E50C61EE-4CEB-45ED-AE9F-98D43790C67B}"
 EndProject

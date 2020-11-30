@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace TestCompose
+namespace ComposeTestEnvironment.xUnit
 {
     /// <summary>
     /// Provide necessary information to discover environment services.

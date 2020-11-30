@@ -2,7 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
-namespace TestCompose
+namespace ComposeTestEnvironment.xUnit
 {
     public static class DisposableListExtensions
     {

@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using YamlDotNet.RepresentationModel;
 
-namespace TestCompose
+namespace ComposeTestEnvironment.xUnit
 {
     internal sealed class ComposeFile
     {

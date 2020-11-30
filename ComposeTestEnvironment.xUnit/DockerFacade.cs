@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Docker.DotNet;
 
-namespace TestCompose
+namespace ComposeTestEnvironment.xUnit
 {
     internal class DockerFacade
     {

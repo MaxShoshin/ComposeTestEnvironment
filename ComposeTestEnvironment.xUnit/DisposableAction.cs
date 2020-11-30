@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace TestCompose
+namespace ComposeTestEnvironment.xUnit
 {
     public sealed class DisposableAction : IDisposable
     {

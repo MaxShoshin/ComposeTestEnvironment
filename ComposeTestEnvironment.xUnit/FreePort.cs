@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.NetworkInformation;
 
-namespace TestCompose
+namespace ComposeTestEnvironment.xUnit
 {
     internal static class FreePort
     {

@@ -3,7 +3,7 @@ using System.Reflection;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-namespace TestCompose
+namespace ComposeTestEnvironment.xUnit
 {
     /// <summary>
     /// Special test framework is used to guarantee cleanup resources after test execution.
@@ -25,7 +25,7 @@ namespace TestCompose
             {
                 throw new InvalidOperationException(
                     "Missing registration of TestFramework. You should add:" + Environment.NewLine +
-                    "[assembly: Xunit.TestFramework(\"TestCompose.TestFramework\", \"TestCompose\")]");
+                    "[assembly: Xunit.TestFramework(\"ComposeTestEnvironment.xUnit.TestFramework\", \"ComposeTestEnvironment.xUnit\")]");
             }
 
             _disposables!.Add(disposable);

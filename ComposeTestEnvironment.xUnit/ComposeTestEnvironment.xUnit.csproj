@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.0;netstandard2.1;net5.0</TargetFrameworks>
+        <Nullable>enable</Nullable>
+        <IsTestProject>false</IsTestProject>
+        <LangVersion>9.0</LangVersion>
+    </PropertyGroup>
+    
+    <PropertyGroup>
+        <PackageId>ComposeTestEnvironment.xUnit</PackageId>
+        <Title>ComposeTestEnvironment.xUnit</Title>
+        <Authors>Maxim Shoshin</Authors>
+        <Owners>Maxim Shoshin</Owners>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <RequireLicenseAcceptance>false</RequireLicenseAcceptance>
+        <RepositoryUrl>https://github.com/MaxShoshin/ComposeTestEnvironment</RepositoryUrl>
+        <PackageDescription>Setup test environment via docker compose. Simple IDE based run and run under CI.</PackageDescription>
+        <PackageTags>Tests, docker, environment, integration, setup</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Docker.DotNet" Version="3.125.4" />
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="5.0.0" />
+        <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+        <PackageReference Include="xunit" Version="2.4.1" />
+        <PackageReference Include="YamlDotNet" Version="8.1.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="../LICENSE" Pack="true" PackagePath="">
+            <IncludeInPackage>true</IncludeInPackage>
+        </None>
+    </ItemGroup>
+
+</Project>

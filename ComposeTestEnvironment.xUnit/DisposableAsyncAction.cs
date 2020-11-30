@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TestCompose
+namespace ComposeTestEnvironment.xUnit
 {
     public sealed class DisposableAsyncAction : IAsyncDisposable
     {

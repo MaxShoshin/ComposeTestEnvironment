@@ -1,4 +1,4 @@
-﻿using TestCompose;
+﻿using ComposeTestEnvironment.xUnit;
 using Xunit.Abstractions;
 
 namespace Sample

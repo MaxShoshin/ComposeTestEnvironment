@@ -11,7 +11,7 @@ using Xunit.Sdk;
 
 // ReSharper disable StaticMemberInGenericType
 
-namespace TestCompose
+namespace ComposeTestEnvironment.xUnit
 {
     public class DockerComposeEnvironmentFixture<TDescriptor> : IAsyncLifetime
         where TDescriptor : DockerComposeDescriptor, new()

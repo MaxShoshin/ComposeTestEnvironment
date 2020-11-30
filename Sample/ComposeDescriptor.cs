@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using TestCompose;
+using ComposeTestEnvironment.xUnit;
 
 // It is necessary to run and tear down docker-compose
-[assembly: Xunit.TestFramework("TestCompose.TestFramework", "TestCompose")]
+[assembly: Xunit.TestFramework("ComposeTestEnvironment.xUnit.TestFramework", "ComposeTestEnvironment.xUnit")]
 
 namespace Sample
 {

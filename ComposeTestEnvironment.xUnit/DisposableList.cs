@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace TestCompose
+namespace ComposeTestEnvironment.xUnit
 {
     /// <summary>
     /// Утилитный класс позволяющий вызывать Dispose у нескольких IDisposable инстансов.

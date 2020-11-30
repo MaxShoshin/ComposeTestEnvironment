@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>net5.0;netcoreapp3.1</TargetFrameworks>
+        <TargetFrameworks>net5.0</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>
@@ -18,11 +18,11 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\TestCompose\TestCompose.csproj" />
+        <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+      <ProjectReference Include="..\ComposeTestEnvironment.xUnit\ComposeTestEnvironment.xUnit.csproj" />
     </ItemGroup>
 
 </Project>
