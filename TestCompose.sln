@@ -10,6 +10,7 @@ ProjectSection(SolutionItems) = preProject
 	dockerfile.tests = dockerfile.tests
 	Directory.Build.props = Directory.Build.props
 	testcompose.yml = testcompose.yml
+	.github\workflows\build.yml = .github\workflows\build.yml
 EndProjectSection
 EndProject
 Global
