@@ -2,8 +2,6 @@
 using Microsoft.Data.SqlClient;
 using Xunit;
 
-[assembly: Xunit.TestFramework("TestCompose.TestFramework", "TestCompose")]
-
 namespace Sample
 {
     public class SqlTest : IClassFixture<SampleComposeFixture>
