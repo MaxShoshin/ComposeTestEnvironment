@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace TestCompose
 {
@@ -26,6 +27,9 @@ namespace TestCompose
         public virtual IReadOnlyList<string> StartedMessageMarkers { get; } = Array.Empty<string>();
 
         public virtual bool WaitForPortsListen { get; } = true;
+
+        public virtual Task WaitForReady(Discovery discovery)
+            => Task.CompletedTask;
 
         public abstract IReadOnlyDictionary<string, int[]> Ports { get; }
     }

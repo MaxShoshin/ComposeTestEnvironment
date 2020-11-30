@@ -156,10 +156,14 @@ namespace TestCompose
                 await WaitForListeningPorts(listening);
             }
 
-            return new Discovery(
+            var discovery = new Discovery(
                 portMappings.ToDictionary(
                     item => new HostSubstitution(item.Key, "localhost"),
                     item => (IReadOnlyList<PortSubstitution>)item.Value.Select(port => new PortSubstitution(port.ExposedPort, port.PublicPort)).ToList()));
+
+            await _descriptor.WaitForReady(discovery);
+
+            return discovery;
         }
 
         private async Task WaitForListeningPorts(IReadOnlyList<Uri> listening)
@@ -187,7 +191,10 @@ namespace TestCompose
                         await client.ConnectAsync(uri.Host, uri.Port);
 #endif
 
-                        return;
+                        if (client.Connected)
+                        {
+                            return;
+                        }
                     }
                     catch (SocketException)
                     {
