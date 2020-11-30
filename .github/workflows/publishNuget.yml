@@ -2,7 +2,7 @@
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - '*.*.*'
 
 jobs:
   deploy:
@@ -17,10 +17,7 @@ jobs:
           echo ::set-output name=tag::${GITHUB_REF#refs/*/}
 
     - name: Check output
-      env:
-        RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
       run: |
-          echo $RELEASE_VERSION
           echo ${{ steps.vars.outputs.tag }}
 
     - name: Use .NET 5.0
@@ -30,8 +27,8 @@ jobs:
 
     - name: Build and pack
       run: |
-        dotnet pack --configuration Release -p:PackageVersion=${{ env.RELEASE_VERSION }} --output out
+        dotnet pack --configuration Release -p:PackageVersion=${{ steps.vars.outputs.tag }} --output out
 
     - name: Nuget push
       run: |
-        dotnet nuget push .\out\*.nupkg --api-key ${{NUGET_API_KEY}}
+        dotnet nuget push ./out/*.nupkg --api-key ${{secrets.NUGET_API_KEY}}
