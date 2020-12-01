@@ -25,7 +25,6 @@ namespace ComposeTestEnvironment.xUnit
         private readonly IMessageSink _output;
         private readonly List<string> _outputStrings = new();
         private readonly DisposableList _disposables = new();
-        private readonly TDescriptor _descriptor = new();
 
         public DockerComposeEnvironmentFixture(IMessageSink output)
         {
@@ -36,7 +35,39 @@ namespace ComposeTestEnvironment.xUnit
 
         public Discovery Discovery { get; private set; }
 
-        public async Task InitializeAsync()
+        protected TDescriptor Descriptor { get; } = new();
+
+        protected virtual ValueTask AfterInitializeAsync()
+        {
+            return default;
+        }
+
+        protected virtual ValueTask BeforeDisposeAsync()
+        {
+            return default;
+        }
+
+        protected virtual ValueTask BeforeSingleTimeInitialize()
+        {
+            return default;
+        }
+
+        protected virtual ValueTask AfterSingleTimeInitialize(Discovery discovery)
+        {
+            return default;
+        }
+
+        protected void RegisterGlobalDisposable(IDisposable disposable)
+        {
+            _disposables.Add(disposable);
+        }
+
+        protected ValueTask RegisterGlobalDisposableAsync(IAsyncDisposable disposable)
+        {
+            return _disposables.AddAsync(disposable);
+        }
+
+        async Task IAsyncLifetime.InitializeAsync()
         {
             if (_initializeAsync == null)
             {
@@ -47,48 +78,59 @@ namespace ComposeTestEnvironment.xUnit
             }
 
             Discovery = await _initializeAsync;
+
+            await AfterInitializeAsync();
         }
 
-        public Task DisposeAsync()
+        async Task IAsyncLifetime.DisposeAsync()
         {
-            return Task.CompletedTask;
+            await BeforeDisposeAsync();
         }
 
         private async Task<Discovery> InitializeCoreAsync()
         {
-            if (_descriptor.IsUnderCompose)
+            await BeforeSingleTimeInitialize();
+
+            Discovery discovery;
+            if (Descriptor.IsUnderCompose)
             {
-                if (_descriptor.WaitForPortsListen)
+                if (Descriptor.WaitForPortsListen)
                 {
-                    var listening = _descriptor.Ports
+                    var listening = Descriptor.Ports
                         .SelectMany(x => x.Value.Select(port => new UriBuilder("tcp://", x.Key, port).Uri))
                         .ToList();
 
                     await WaitForListeningPorts(listening);
                 }
 
-                return new Discovery(
-                    _descriptor.Ports.ToDictionary(
+                discovery = new Discovery(
+                    Descriptor.Ports.ToDictionary(
                         item => new HostSubstitution(item.Key, item.Key),
                         item => (IReadOnlyList<PortSubstitution>)item.Value.Select(port => new PortSubstitution(port, port)).ToList()));
             }
+            else
+            {
+                discovery = await InitializeComposeEnvironmentAsync();
+            }
 
-            return await InitializeComposeEnvironmentAsync();
+            await AfterSingleTimeInitialize(discovery);
+
+            return discovery;
         }
 
         private async Task<Discovery> InitializeComposeEnvironmentAsync()
         {
-            using var composeFileStream = File.OpenRead(FindFile(_descriptor.FileName));
+            using var composeFileStream = File.OpenRead(FindFile(Descriptor.FileName));
 
             var composeFile = ComposeFile.ParseAsync(composeFileStream);
 
             await AssignExposedPorts(composeFile);
 
             var generatedFilePath = GenerateComposeFileWithExposedPorts(composeFile);
-            var projectName = _descriptor.ProjectName;
+            var projectName = Descriptor.ProjectName;
             TestFramework.RegisterDisposable(_disposables);
 
-            if (_descriptor.DownOnComplete)
+            if (Descriptor.DownOnComplete)
             {
                 var downProcess = ComposeDown(generatedFilePath, projectName);
                 _disposables.Add(downProcess);
@@ -97,7 +139,7 @@ namespace ComposeTestEnvironment.xUnit
                 {
                     WriteMessage("Stopping compose...");
                     await downProcess.Start(_startTimeout);
-                    await downProcess.WaitForExit().WithTimeout(_descriptor.StopTimeout);
+                    await downProcess.WaitForExit().WithTimeout(Descriptor.StopTimeout);
                 });
             }
 
@@ -117,7 +159,7 @@ namespace ComposeTestEnvironment.xUnit
                 .Argument("up")
                 .CollectOutput(WriteMessage);
 
-            foreach (var message in _descriptor.StartedMessageMarkers)
+            foreach (var message in Descriptor.StartedMessageMarkers)
             {
                 process.WaitForMessageInOutput(message);
             }
@@ -126,7 +168,7 @@ namespace ComposeTestEnvironment.xUnit
 
             try
             {
-                await process.Start(_descriptor.StartTimeout);
+                await process.Start(Descriptor.StartTimeout);
             }
             catch (OperationCanceledException ex)
             {
@@ -143,10 +185,10 @@ namespace ComposeTestEnvironment.xUnit
             var portMappings = composeFile.Services
                 .Where(service =>
                            service.Image != null &&
-                           _descriptor.Ports.ContainsKey(service.ServiceName))
+                           Descriptor.Ports.ContainsKey(service.ServiceName))
                 .ToDictionary(x => x.ServiceName, x => x.PortMappings);
 
-            if (_descriptor.WaitForPortsListen)
+            if (Descriptor.WaitForPortsListen)
             {
                 var listening = portMappings.Values
                     .SelectMany(x => x)
@@ -161,14 +203,14 @@ namespace ComposeTestEnvironment.xUnit
                     item => new HostSubstitution(item.Key, "localhost"),
                     item => (IReadOnlyList<PortSubstitution>)item.Value.Select(port => new PortSubstitution(port.ExposedPort, port.PublicPort)).ToList()));
 
-            await _descriptor.WaitForReady(discovery);
+            await Descriptor.WaitForReady(discovery);
 
             return discovery;
         }
 
         private async Task WaitForListeningPorts(IReadOnlyList<Uri> listening)
         {
-            using var cancellationTokenSource = new CancellationTokenSource(_descriptor.StartTimeout);
+            using var cancellationTokenSource = new CancellationTokenSource(Descriptor.StartTimeout);
 
             var tasks = listening.Select(uri => Connect(uri, cancellationTokenSource.Token));
 
@@ -252,7 +294,7 @@ namespace ComposeTestEnvironment.xUnit
                 }
             });
 
-            if (_descriptor.GenerateImageBasedCompose)
+            if (Descriptor.GenerateImageBasedCompose)
             {
                 var nonImageServices = composeFile.Services
                     .Where(service => service.Image == null)
@@ -262,7 +304,7 @@ namespace ComposeTestEnvironment.xUnit
                 composeFile.RemoveServices(nonImageServices);
             }
 
-            composeFile.RemoveServices(_descriptor.ServicesToRemove);
+            composeFile.RemoveServices(Descriptor.ServicesToRemove);
 
             using (var tempStream = File.OpenWrite(generatedComposeFile))
             {
@@ -305,7 +347,7 @@ namespace ComposeTestEnvironment.xUnit
             do
             {
                 var prefix = random.Next().ToString("x8");
-                fileName = $"~{_descriptor.ProjectName}{prefix}.tmp.yml";
+                fileName = $"~{Descriptor.ProjectName}{prefix}.tmp.yml";
             } while (File.Exists(fileName));
 
             return fileName;
