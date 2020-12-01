@@ -4,9 +4,36 @@ during as part of docker compose service.
 
 ## Installation
 
+1. Add reference
+    ```
+    dotnet add ComposeTestEnvironment.xUnit
+    ```
+
+2. Create docker file with dotnet sdk and copy to it all project
+   See [dockerfile.tests] for example.
+
+3. Create docker-compose yaml file
+   Specify necessary environment services, don't expose internal ports
+   Specify service based on image in step 2, with command `dotnet test`, with special environment variable `UNDER_COMPOSE` (see [testcompose.yml])
+
+4. Add environment descriptor to you test assembly 
+   Create class `ComposeDescriptor` with default constructor inherited from `DockerComposeDescriptor`.
+   Specify docker compose file name (this library scans all parent directories for the file with the same name)
+   Specify default ports for services specified by you docker-compose file
+   
+5. Use `IClassFixture<DockerComposeEnvironmentFixture<ComposeDescriptor>>`
+   Or you can create class inherited from `DockerComposeEnvironmentFixture<ComposeDescriptor>`.
+   You can inject into initialization pipeline your code.
+
+6. Setup your CI system to run tests
+
+To run tests:
 ```
-dotnet add 
+docker-compose --file testcompose.yml up --abort-on-container-exit --build
+docker-compose --file testcompose.yml kill
+docker-compose --file testcompose.yml down --rmi local
 ```
+please specify your docker-compose file. Also you should pull images.
 
 
 ## Motivation
@@ -35,17 +62,11 @@ This test addon tries to fix these issues:
    - tear down docker compose before test stop (if necessary, you can leave container without clearing)
    - on any docker related failure print docker output to test output
    - print docker output as xunit diagnostic message
+- it doesnt use test collection to setup and teardown environment (as all tests in collections executed without parallelism)    
 
 ## Sample
 
-See src/Sample.
-
-To run tests on your CI system:
-```
-docker-compose --file testcompose.yml up --abort-on-container-exit --build
-docker-compose --file testcompose.yml kill
-docker-compose --file testcompose.yml down --rmi local
-```
+See [Sample] folder.
 
 ## FAQ
 1. How to display docker compose logs
