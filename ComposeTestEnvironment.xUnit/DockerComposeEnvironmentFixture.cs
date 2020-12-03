@@ -113,6 +113,8 @@ namespace ComposeTestEnvironment.xUnit
                 discovery = await InitializeComposeEnvironmentAsync();
             }
 
+            await Descriptor.WaitForReady(discovery);
+
             await AfterSingleTimeInitialize(discovery);
 
             return discovery;
@@ -204,12 +206,10 @@ namespace ComposeTestEnvironment.xUnit
                     item => new HostSubstitution(item.Key, "localhost"),
                     item => (IReadOnlyList<PortSubstitution>)item.Value.Select(port => new PortSubstitution(port.ExposedPort, port.PublicPort)).ToList()));
 
-            await Descriptor.WaitForReady(discovery);
-
             return discovery;
         }
 
-        private async Task WaitForListeningPorts(IReadOnlyList<Uri> listening)
+        protected virtual async Task WaitForListeningPorts(IReadOnlyList<Uri> listening)
         {
             using var cancellationTokenSource = new CancellationTokenSource(Descriptor.StartTimeout);
 
