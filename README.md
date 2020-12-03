@@ -1,6 +1,6 @@
-﻿## Description:
+﻿# Compose Test Environment:
 Setup integration test environment via docker compose. Simplify run and debug tests from IDE and run tests 
-during as part of docker compose service.
+during CI as part of docker compose service.
 
 ## Installation
 
