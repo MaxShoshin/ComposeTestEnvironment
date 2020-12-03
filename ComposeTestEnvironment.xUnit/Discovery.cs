@@ -35,6 +35,10 @@ namespace ComposeTestEnvironment.xUnit
                     _substitutions.Add(new Substitution(
                         TemplateField(host.OriginalHost, "." + port.OriginalPort),
                         port.NewPort.ToString()));
+
+                    _substitutions.Add(new Substitution(
+                                           TemplateField(host.OriginalHost, ":" + port.OriginalPort),
+                                           host.NewHost + ":" + port.NewPort));
                 }
             }
         }
