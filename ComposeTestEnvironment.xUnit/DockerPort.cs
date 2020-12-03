@@ -1,4 +1,4 @@
 ﻿namespace ComposeTestEnvironment.xUnit
 {
-    internal record DockerPort (in ushort ExposedPort, ushort PublicPort);
+    internal record DockerPort (ushort ExposedPort, ushort PublicPort, string Protocol);
 }

@@ -192,6 +192,7 @@ namespace ComposeTestEnvironment.xUnit
             {
                 var listening = portMappings.Values
                     .SelectMany(x => x)
+                    .Where(x => string.IsNullOrEmpty(x.Protocol) || x.Protocol == "tcp")
                     .Select(x => new UriBuilder("tcp://", "localhost", x.PublicPort).Uri)
                     .ToList();
 
@@ -314,7 +315,7 @@ namespace ComposeTestEnvironment.xUnit
             return generatedComposeFile;
         }
 
-        private static async Task AssignExposedPorts(ComposeFile composeFile)
+        private async Task AssignExposedPorts(ComposeFile composeFile)
         {
             var docker = new DockerFacade();
 
@@ -327,12 +328,28 @@ namespace ComposeTestEnvironment.xUnit
                     continue;
                 }
 
-                var exposedPorts = await docker.GetExposedPortsAsync(service.Image);
-                var publicPorts = FreePort.Rent(lastPort, exposedPorts.Count);
+                if (!Descriptor.Ports.TryGetValue(service.ServiceName, out var discoveryPorts))
+                {
+                    continue;
+                }
+
+                var imageExposedPorts = await docker.GetExposedPortsAsync(service.Image);
+
+                var publicPorts = FreePort.Rent(lastPort, discoveryPorts.Length);
                 lastPort = (ushort)(publicPorts.Max() + 1);
 
-                var portMapping = exposedPorts
-                    .Select((exposedPort, index) => new DockerPort(exposedPort, publicPorts[index]))
+                var portMapping = discoveryPorts
+                    .Select((port, index) =>
+                    {
+                        // Expose only necessary ports, dont expose all ports from image
+                        var imagePort = imageExposedPorts.FirstOrDefault(x => x.PortNumber == port);
+                        if (imagePort != default)
+                        {
+                            return new DockerPort(imagePort.PortNumber, publicPorts[index], imagePort.Protocol);
+                        }
+
+                        return new DockerPort((ushort)port, publicPorts[index], string.Empty);
+                    })
                     .ToList();
 
                 service.SetPortMapping(portMapping);

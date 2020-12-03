@@ -8,7 +8,7 @@ namespace ComposeTestEnvironment.xUnit
 {
     internal class DockerFacade
     {
-        public async Task<IReadOnlyList<ushort>> GetExposedPortsAsync(string image)
+        public async Task<IReadOnlyList<(ushort PortNumber, string Protocol)>> GetExposedPortsAsync(string image)
         {
             var client = new DockerClientConfiguration().CreateClient();
 
@@ -19,11 +19,13 @@ namespace ComposeTestEnvironment.xUnit
                 .ToList();
         }
 
-        private ushort ParsePort(string portDefinition)
+        private (ushort PortNumber, string Protocol) ParsePort(string portDefinition)
         {
-            var portNumber = portDefinition.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries).First();
+            var parts = portDefinition.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            var portNumber = parts.First();
+            var protocol = parts.Length == 2 ? parts.Last() : string.Empty;
 
-            return ushort.Parse(portNumber);
+            return (ushort.Parse(portNumber), protocol);
         }
     }
 }

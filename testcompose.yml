@@ -5,6 +5,9 @@
       ACCEPT_EULA: Y
       SA_PASSWORD: yourStrong(!)Password
 
+  jaeger:
+    image: jaegertracing/all-in-one:1.8
+
 # Run tests
   tests-all:
     build:

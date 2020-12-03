@@ -26,12 +26,22 @@ namespace ComposeTestEnvironment.xUnit
 
         public void SetPortMapping(IReadOnlyList<DockerPort> portMapping)
         {
+            string Format(DockerPort dockerPort)
+            {
+                if (string.IsNullOrEmpty(dockerPort.Protocol))
+                {
+                    return $"{dockerPort.PublicPort}:{dockerPort.ExposedPort}";
+                }
+
+                return $"{dockerPort.PublicPort}:{dockerPort.ExposedPort}/{dockerPort.Protocol}";
+            }
+
             _serviceDefinition.Children.Remove("ports");
             _serviceDefinition.Children.Add(
                 "ports",
                 new YamlSequenceNode(
                     portMapping.Select(dockerPort =>
-                                           new YamlScalarNode($"{dockerPort.PublicPort}:{dockerPort.ExposedPort}"))));
+                                          new YamlScalarNode(Format(dockerPort)))));
 
             PortMappings = portMapping;
         }

@@ -16,6 +16,8 @@ namespace Sample
         {
             // Specify all used in tests default service ports
             ["sqlserver"] = new[] {1433},
+
+            ["jaeger"] = new[] { 16686, 5778, 6831 },
         };
 
         // Additional settings
