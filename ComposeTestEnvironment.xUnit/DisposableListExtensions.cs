@@ -13,7 +13,7 @@ namespace ComposeTestEnvironment.xUnit
 
         public static async ValueTask AddAsync([NotNull] this DisposableList list, [NotNull] Func<Task> actionOnDispose)
         {
-            await list.AddAsync(new DisposableAsyncAction(actionOnDispose));
+            await list.AddAsync(new DisposableAsyncAction(actionOnDispose)).ConfigureAwait(false);
         }
     }
 }

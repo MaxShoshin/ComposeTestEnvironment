@@ -116,7 +116,7 @@ namespace ComposeTestEnvironment.xUnit
             _process.BeginOutputReadLine();
             _process.BeginErrorReadLine();
 
-            await Task.WhenAll(_startedTasks).WithTimeout(timeout);
+            await Task.WhenAll(_startedTasks).WithTimeout(timeout).ConfigureAwait(false);
         }
 
         public Task<int> WaitForExit()

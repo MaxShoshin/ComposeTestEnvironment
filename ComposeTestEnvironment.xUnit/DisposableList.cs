@@ -39,7 +39,7 @@ namespace ComposeTestEnvironment.xUnit
 
             if (_isDisposed)
             {
-                await disposable.DisposeAsync();
+                await disposable.DisposeAsync().ConfigureAwait(false);
             }
             else
             {
@@ -75,7 +75,7 @@ namespace ComposeTestEnvironment.xUnit
             {
                 if (disposable is IAsyncDisposable asyncDisposable)
                 {
-                    await asyncDisposable.DisposeAsync();
+                    await asyncDisposable.DisposeAsync().ConfigureAwait(false);
                 }
 
                 (disposable as IDisposable)?.Dispose();

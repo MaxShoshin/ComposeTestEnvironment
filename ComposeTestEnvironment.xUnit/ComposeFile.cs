@@ -17,7 +17,7 @@ namespace ComposeTestEnvironment.xUnit
 
         public IReadOnlyList<ComposeService> Services { get; private set; }
 
-        public static ComposeFile ParseAsync(Stream stream)
+        public static ComposeFile Parse(Stream stream)
         {
             using var reader = new StreamReader(stream);
 

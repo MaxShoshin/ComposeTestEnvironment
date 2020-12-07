@@ -6,13 +6,13 @@ using Docker.DotNet;
 
 namespace ComposeTestEnvironment.xUnit
 {
-    internal class DockerFacade
+    internal sealed class DockerFacade
     {
         public async Task<IReadOnlyList<(ushort PortNumber, string Protocol)>> GetExposedPortsAsync(string image)
         {
             var client = new DockerClientConfiguration().CreateClient();
 
-            var inspectImage = await client.Images.InspectImageAsync(image);
+            var inspectImage = await client.Images.InspectImageAsync(image).ConfigureAwait(false);
 
             return inspectImage.Config.ExposedPorts.Keys
                 .Select(ParsePort)

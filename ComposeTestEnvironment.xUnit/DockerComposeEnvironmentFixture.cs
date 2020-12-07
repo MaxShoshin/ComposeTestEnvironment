@@ -77,19 +77,19 @@ namespace ComposeTestEnvironment.xUnit
                 }
             }
 
-            Discovery = await _initializeAsync;
+            Discovery = await _initializeAsync.ConfigureAwait(false);
 
-            await AfterInitializeAsync();
+            await AfterInitializeAsync().ConfigureAwait(false);
         }
 
         async Task IAsyncLifetime.DisposeAsync()
         {
-            await BeforeDisposeAsync();
+            await BeforeDisposeAsync().ConfigureAwait(false);
         }
 
         private async Task<Discovery> InitializeCoreAsync()
         {
-            await BeforeSingleTimeInitialize();
+            await BeforeSingleTimeInitialize().ConfigureAwait(false);
 
             Discovery discovery;
             if (Descriptor.IsUnderCompose)
@@ -100,7 +100,7 @@ namespace ComposeTestEnvironment.xUnit
                         .SelectMany(x => x.Value.Select(port => new UriBuilder("tcp://", x.Key, port).Uri))
                         .ToList();
 
-                    await WaitForListeningPorts(listening);
+                    await WaitForListeningPorts(listening).ConfigureAwait(false);
                 }
 
                 discovery = new Discovery(
@@ -110,12 +110,12 @@ namespace ComposeTestEnvironment.xUnit
             }
             else
             {
-                discovery = await InitializeComposeEnvironmentAsync();
+                discovery = await InitializeComposeEnvironmentAsync().ConfigureAwait(false);
             }
 
-            await Descriptor.WaitForReady(discovery);
+            await Descriptor.WaitForReady(discovery).ConfigureAwait(false);
 
-            await AfterSingleTimeInitialize(discovery);
+            await AfterSingleTimeInitialize(discovery).ConfigureAwait(false);
 
             return discovery;
         }
@@ -124,9 +124,9 @@ namespace ComposeTestEnvironment.xUnit
         {
             using var composeFileStream = File.OpenRead(FindFile(Descriptor.FileName));
 
-            var composeFile = ComposeFile.ParseAsync(composeFileStream);
+            var composeFile = ComposeFile.Parse(composeFileStream);
 
-            await AssignExposedPorts(composeFile);
+            await AssignExposedPorts(composeFile).ConfigureAwait(false);
 
             var generatedFilePath = GenerateComposeFileWithExposedPorts(composeFile);
             var projectName = Descriptor.ProjectName;
@@ -140,20 +140,20 @@ namespace ComposeTestEnvironment.xUnit
                 await _disposables.AddAsync(async () =>
                 {
                     WriteMessage("Stopping compose...");
-                    await downProcess.Start(_startTimeout);
-                    await downProcess.WaitForExit().WithTimeout(Descriptor.StopTimeout);
-                });
+                    await downProcess.Start(_startTimeout).ConfigureAwait(false);
+                    await downProcess.WaitForExit().WithTimeout(Descriptor.StopTimeout).ConfigureAwait(false);
+                }).ConfigureAwait(false);
             }
 
             var downBeforeCreate = ComposeDown(generatedFilePath, projectName);
             _disposables.Add(downBeforeCreate);
-            await downBeforeCreate.Start(_startTimeout);
-            await downBeforeCreate.WaitForExit();
+            await downBeforeCreate.Start(_startTimeout).ConfigureAwait(false);
+            await downBeforeCreate.WaitForExit().ConfigureAwait(false);
 
             var pullProcess = ComposePull(generatedFilePath, projectName);
             _disposables.Add(pullProcess);
-            await pullProcess.Start(TimeSpan.FromMinutes(5));
-            await pullProcess.WaitForExit();
+            await pullProcess.Start(TimeSpan.FromMinutes(5)).ConfigureAwait(false);
+            await pullProcess.WaitForExit().ConfigureAwait(false);
 
             var process = new ProcessHelper(ComposeExe)
                 .Argument("-f", generatedFilePath)
@@ -170,7 +170,7 @@ namespace ComposeTestEnvironment.xUnit
 
             try
             {
-                await process.Start(Descriptor.StartTimeout);
+                await process.Start(Descriptor.StartTimeout).ConfigureAwait(false);
             }
             catch (OperationCanceledException ex)
             {
@@ -198,7 +198,7 @@ namespace ComposeTestEnvironment.xUnit
                     .Select(x => new UriBuilder("tcp://", "localhost", x.PublicPort).Uri)
                     .ToList();
 
-                await WaitForListeningPorts(listening);
+                await WaitForListeningPorts(listening).ConfigureAwait(false);
             }
 
             var discovery = new Discovery(
@@ -215,7 +215,7 @@ namespace ComposeTestEnvironment.xUnit
 
             var tasks = listening.Select(uri => Connect(uri, cancellationTokenSource.Token));
 
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(tasks).ConfigureAwait(false);
         }
 
         private async Task Connect(Uri uri, CancellationToken cancellation)
@@ -229,9 +229,9 @@ namespace ComposeTestEnvironment.xUnit
                     try
                     {
 #if NET5_0
-                        await client.ConnectAsync(uri.Host, uri.Port, cancellation);
+                        await client.ConnectAsync(uri.Host, uri.Port, cancellation).ConfigureAwait(false);
 #else
-                        await client.ConnectAsync(uri.Host, uri.Port);
+                        await client.ConnectAsync(uri.Host, uri.Port).ConfigureAwait(false);
 #endif
 
                         if (client.Connected)
@@ -243,7 +243,7 @@ namespace ComposeTestEnvironment.xUnit
                     {
                     }
 
-                    await Task.Delay(TimeSpan.FromMilliseconds(50), cancellation);
+                    await Task.Delay(TimeSpan.FromMilliseconds(50), cancellation).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException ex)
@@ -333,7 +333,7 @@ namespace ComposeTestEnvironment.xUnit
                     continue;
                 }
 
-                var imageExposedPorts = await docker.GetExposedPortsAsync(service.Image);
+                var imageExposedPorts = await docker.GetExposedPortsAsync(service.Image).ConfigureAwait(false);
 
                 var publicPorts = FreePort.Rent(lastPort, discoveryPorts.Length);
                 lastPort = (ushort)(publicPorts.Max() + 1);

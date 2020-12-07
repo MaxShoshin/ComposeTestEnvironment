@@ -10,7 +10,7 @@ namespace ComposeTestEnvironment.xUnit
         {
             using (var cancellationSource = new CancellationTokenSource(timeout))
             {
-                return await task.WithCancellation(cancellationSource.Token);
+                return await task.WithCancellation(cancellationSource.Token).ConfigureAwait(false);
             }
         }
 
@@ -21,7 +21,7 @@ namespace ComposeTestEnvironment.xUnit
             // This disposes the registration as soon as one of the tasks trigger
             using (cancellationToken.Register(state => { ((TaskCompletionSource<byte>)state!).TrySetResult(1); }, tcs))
             {
-                var resultTask = await Task.WhenAny(task, tcs.Task);
+                var resultTask = await Task.WhenAny(task, tcs.Task).ConfigureAwait(false);
 
                 if (resultTask == tcs.Task)
                 {
@@ -29,7 +29,7 @@ namespace ComposeTestEnvironment.xUnit
                     throw new OperationCanceledException(cancellationToken);
                 }
 
-                return await task;
+                return await task.ConfigureAwait(false);
             }
         }
     }

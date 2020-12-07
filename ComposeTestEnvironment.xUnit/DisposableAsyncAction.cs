@@ -22,7 +22,7 @@ namespace ComposeTestEnvironment.xUnit
                 return;
             }
 
-            await _action();
+            await _action().ConfigureAwait(false);
         }
     }
 }
