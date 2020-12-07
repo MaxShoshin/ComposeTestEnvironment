@@ -1,5 +1,5 @@
 ﻿# Compose Test Environment:
-Setup integration test environment via docker compose. Simplify run and debug tests from IDE and run tests 
+Setup integration test environment via docker compose. Simplify run and debug tests from IDE and run tests
 during CI as part of docker compose service.
 
 ## Installation
@@ -16,11 +16,11 @@ during CI as part of docker compose service.
    Specify necessary environment services, don't expose internal ports
    Specify service based on image in step 2, with command `dotnet test`, with special environment variable `UNDER_COMPOSE` (see [testcompose.yml])
 
-4. Add environment descriptor to you test assembly 
+4. Add environment descriptor to you test assembly
    Create class `ComposeDescriptor` with default constructor inherited from `DockerComposeDescriptor`.
    Specify docker compose file name (this library scans all parent directories for the file with the same name)
    Specify default ports for services specified by you docker-compose file
-   
+
 5. Use `IClassFixture<DockerComposeEnvironmentFixture<ComposeDescriptor>>`
    Or you can create class inherited from `DockerComposeEnvironmentFixture<ComposeDescriptor>`.
    You can inject into initialization pipeline your code.
@@ -33,14 +33,12 @@ docker-compose --file testcompose.yml up --abort-on-container-exit --build
 docker-compose --file testcompose.yml kill
 docker-compose --file testcompose.yml down --rmi local
 ```
-please specify your docker-compose file. Also you should pull images.
-
 
 ## Motivation
-Integration tests (or end-to-end) usually need to setup some environment. During the era of docker I don't want 
-to install any of software on my desktop or have additional shared service with all environment installed. So I 
+Integration tests (or end-to-end) usually need to setup some environment. During the era of docker I don't want
+to install any of software on my desktop or have additional shared service with all environment installed. So I
 put all necessary environment service in docker-compose file. Also I adept of zero configuration approach. I.e.
-after `git clone` you should be able to `dotnet test` and on the main branch you should have all passed tests 
+after `git clone` you should be able to `dotnet test` and on the main branch you should have all passed tests
 without any additional frictions. Also I would like to run/debug my tests directly from my favorite IDE.
 
 The simplest answer - create docker-compose file and start environment before tests doesn't work:
@@ -52,9 +50,9 @@ This test addon tries to fix these issues:
 - you specify all necessary environment in docker compose file
 - in this docker compose file also you run tests as additional service
 - on local test run (or run/debug tests from IDE):
-   - it finds free ports on localhost 
-   - generates new docker-compose file with exposed ports 
-   - provides ability to «service discovery» (i.e. you should use different hosts/ports to connect to the services 
+   - it finds free ports on localhost
+   - generates new docker-compose file with exposed ports
+   - provides ability to «service discovery» (i.e. you should use different hosts/ports to connect to the services
      depending on type of run)
    - stops previously run container
    - starts docker compose file before first test used
@@ -62,11 +60,16 @@ This test addon tries to fix these issues:
    - tear down docker compose before test stop (if necessary, you can leave container without clearing)
    - on any docker related failure print docker output to test output
    - print docker output as xunit diagnostic message
-- it doesnt use test collection to setup and teardown environment (as all tests in collections executed without parallelism)    
+- it doesnt use test collection to setup and teardown environment (as all tests in collections executed without parallelism)
 
 ## Sample
 
-See [Sample] folder.
+See:
+- [testcompose.yml](blob/master/testcompose.yml) - docker-compose environment with service to run test
+- [ComposeDescriptor.cs](blob/master/Sample/ComposeDescriptor.cs) - environment descriptor in code.
+- [SampleComposeFixture.cs](blob/master/Sample/SampleComposeFixture.cs) - xUnit class fixture, you should mark your tests
+  via `IClassFixture<SampleComposeFixture>` to work with environment services
+- [SqlTest.cs](blob/master/Sample/SqlTest.cs) - example of test
 
 ## FAQ
 1. How to display docker compose logs
@@ -83,7 +86,7 @@ Put into your test cspoj:
         <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 ```
-Now 
+Now
 ```shell
 dotnet test
 ```
@@ -106,7 +109,7 @@ Override `DockerComposeDescriptor.DownOnComplete` property to return false.
    Compose pull before test run
    Compose down before test run (to stop compose after terminate debug)
    Compose down after test run
-   
+
 3. (Not yet implemented) Run tests from IDE, attach to existing containers, start new if necessary
    Find existing running compose
    If good - use it, if not start it as in 2. But do not tear down it after test execution finished (to reuse it on next time)
