@@ -2,19 +2,18 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ComposeTestEnvironment.xUnit
+namespace ComposeTestEnvironment.xUnit.Infrastructure
 {
-    public sealed class DisposableAsyncAction : IAsyncDisposable
+    internal sealed class DisposableAsyncAction : IAsyncDisposable
     {
         private readonly Func<Task> _action;
         private int _isDisposed;
 
         public DisposableAsyncAction(Func<Task> action)
         {
-            this._action = action;
+            _action = action;
         }
 
-        /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
             if (Interlocked.Exchange(ref _isDisposed, 1) != 0)

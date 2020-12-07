@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ComposeTestEnvironment.xUnit
+namespace ComposeTestEnvironment.xUnit.Infrastructure
 {
     internal static class TaskExtensions
     {

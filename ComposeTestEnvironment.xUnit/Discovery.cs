@@ -70,6 +70,15 @@ namespace ComposeTestEnvironment.xUnit
         }
 
         /// <summary>
+        /// Get available services.
+        /// </summary>
+        /// <returns>Service lists.</returns>
+        public IReadOnlyList<string> GetServices()
+        {
+            return _discoveryInfo.Keys.ToList();
+        }
+
+        /// <summary>
         /// Get port for the service.
         /// </summary>
         /// <param name="serviceName">Service name.</param>

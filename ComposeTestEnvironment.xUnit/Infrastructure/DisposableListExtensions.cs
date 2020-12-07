@@ -2,9 +2,9 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
-namespace ComposeTestEnvironment.xUnit
+namespace ComposeTestEnvironment.xUnit.Infrastructure
 {
-    public static class DisposableListExtensions
+    internal static class DisposableListExtensions
     {
         public static void Add([NotNull] this DisposableList list, [NotNull] Action actionOnDispose)
         {

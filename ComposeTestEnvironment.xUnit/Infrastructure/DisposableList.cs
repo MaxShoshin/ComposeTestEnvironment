@@ -3,12 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ComposeTestEnvironment.xUnit
+namespace ComposeTestEnvironment.xUnit.Infrastructure
 {
-    /// <summary>
-    /// Утилитный класс позволяющий вызывать Dispose у нескольких IDisposable инстансов.
-    /// </summary>
-    public sealed class DisposableList : IDisposable, IAsyncDisposable
+    internal sealed class DisposableList : IDisposable, IAsyncDisposable
     {
         private readonly List<object> _disposables = new();
         private bool _isDisposed;
@@ -47,7 +44,6 @@ namespace ComposeTestEnvironment.xUnit
             }
         }
 
-        /// <inheritdoc/>
         public void Dispose()
         {
             var valueTask = DisposeAsync();
@@ -57,7 +53,6 @@ namespace ComposeTestEnvironment.xUnit
             }
         }
 
-        /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
             if (_isDisposed)

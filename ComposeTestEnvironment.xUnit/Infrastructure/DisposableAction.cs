@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading;
 
-namespace ComposeTestEnvironment.xUnit
+namespace ComposeTestEnvironment.xUnit.Infrastructure
 {
-    public sealed class DisposableAction : IDisposable
+    internal sealed class DisposableAction : IDisposable
     {
         private readonly Action _action;
         private int _isDisposed;
@@ -13,7 +13,6 @@ namespace ComposeTestEnvironment.xUnit
             _action = action;
         }
 
-        /// <inheritdoc />
         public void Dispose()
         {
             if (Interlocked.Exchange(ref _isDisposed, 1) != 0)

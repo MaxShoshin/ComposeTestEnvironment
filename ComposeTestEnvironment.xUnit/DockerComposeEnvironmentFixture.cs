@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using ComposeTestEnvironment.xUnit.Infrastructure;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
@@ -122,7 +123,7 @@ namespace ComposeTestEnvironment.xUnit
 
         private async Task<Discovery> InitializeComposeEnvironmentAsync()
         {
-            using var composeFileStream = File.OpenRead(FindFile(Descriptor.FileName));
+            using var composeFileStream = File.OpenRead(FindFile(Descriptor.ComposeFileName));
 
             var composeFile = ComposeFile.Parse(composeFileStream);
 

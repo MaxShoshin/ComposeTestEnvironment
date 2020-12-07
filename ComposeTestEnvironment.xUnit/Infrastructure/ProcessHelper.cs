@@ -5,7 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ComposeTestEnvironment.xUnit
+namespace ComposeTestEnvironment.xUnit.Infrastructure
 {
     internal sealed class ProcessHelper : IDisposable
     {
