@@ -10,7 +10,7 @@ namespace Sample
     public class ComposeDescriptor : DockerComposeDescriptor
     {
         // docker-compose file name (it will try to find it in nearest parent directory)
-        public override string FileName => "testcompose.yml";
+        public override string ComposeFileName => "testcompose.yml";
 
         public override IReadOnlyDictionary<string, int[]> Ports => new Dictionary<string, int[]>
         {
