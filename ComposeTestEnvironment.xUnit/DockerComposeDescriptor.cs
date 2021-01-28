@@ -70,5 +70,15 @@ namespace ComposeTestEnvironment.xUnit
         /// <returns>Task.</returns>
         public virtual Task WaitForReady(Discovery discovery)
             => Task.CompletedTask;
+
+        /// <summary>
+        /// This method allows to override docker compose service's environment variables (only applicable for test run outside of compose).
+        /// </summary>
+        /// <param name="serviceName">Service name.</param>
+        /// <param name="existing">Existing specified in compose file environment variables.</param>
+        /// <param name="discovery">Discovery to allow get host/port of the sibling services.</param>
+        /// <returns></returns>
+        public virtual Task<IReadOnlyDictionary<string, string>> GetEnvironment(string serviceName, IReadOnlyDictionary<string, string> existing, Discovery discovery)
+            => Task.FromResult(existing);
     }
 }

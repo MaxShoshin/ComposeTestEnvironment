@@ -37,5 +37,23 @@ namespace Sample
             // You can specify additional logic to detect that all services are up and ready
             return Task.CompletedTask;
         }
+
+        public override async Task<IReadOnlyDictionary<string, string>> GetEnvironment(string serviceName, IReadOnlyDictionary<string, string> existing, Discovery discovery)
+        {
+            // You can replace environment variable for specific docker-compose service
+            // For example it can be useful to setup correct outbound listening port for Kafka
+
+            // Example code:
+            // if (serviceName == "sqlserver")
+            // {
+            //     return new Dictionary<string, string>
+            //     {
+            //         ["ACCEPT_EULA"] = "Y",
+            //         ["SA_PASSWORD"] = "yourStrong(!)Password",
+            //     };
+            // }
+
+            return await base.GetEnvironment(serviceName, existing, discovery);
+        }
     }
 }

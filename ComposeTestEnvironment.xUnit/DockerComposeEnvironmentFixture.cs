@@ -129,6 +129,10 @@ namespace ComposeTestEnvironment.xUnit
 
             await AssignExposedPorts(composeFile).ConfigureAwait(false);
 
+            var (discovery, portMappings) = PortMappings(composeFile);
+
+            await ApplyEnvironmentChanges(composeFile, discovery);
+
             var generatedFilePath = GenerateComposeFileWithExposedPorts(composeFile);
             var projectName = Descriptor.ProjectName;
             TestFramework.RegisterDisposable(_disposables);
@@ -185,12 +189,6 @@ namespace ComposeTestEnvironment.xUnit
                 throw new OperationCanceledException($"Timeout, docker output:\r\n {processOutput}", ex);
             }
 
-            var portMappings = composeFile.Services
-                .Where(service =>
-                           service.Image != null &&
-                           Descriptor.Ports.ContainsKey(service.ServiceName))
-                .ToDictionary(x => x.ServiceName, x => x.PortMappings);
-
             if (Descriptor.WaitForPortsListen)
             {
                 var listening = portMappings.Values
@@ -202,12 +200,36 @@ namespace ComposeTestEnvironment.xUnit
                 await WaitForListeningPorts(listening).ConfigureAwait(false);
             }
 
+            return discovery;
+        }
+
+        private (Discovery discovery, Dictionary<string, IReadOnlyList<DockerPort>> portMappings) PortMappings(
+            ComposeFile composeFile)
+        {
+            var portMappings = composeFile.Services
+                .Where(service =>
+                           service.Image != null &&
+                           Descriptor.Ports.ContainsKey(service.ServiceName))
+                .ToDictionary(x => x.ServiceName, x => x.PortMappings);
+
             var discovery = new Discovery(
                 portMappings.ToDictionary(
                     item => new HostSubstitution(item.Key, "localhost"),
-                    item => (IReadOnlyList<PortSubstitution>)item.Value.Select(port => new PortSubstitution(port.ExposedPort, port.PublicPort)).ToList()));
+                    item => (IReadOnlyList<PortSubstitution>)item.Value
+                        .Select(port => new PortSubstitution(port.ExposedPort, port.PublicPort)).ToList()));
 
-            return discovery;
+            return (discovery, portMappings);
+        }
+
+        private async Task ApplyEnvironmentChanges(ComposeFile composeFile, Discovery discovery)
+        {
+            foreach (var service in composeFile.Services)
+            {
+                var existing = service.GetEnvironment();
+                var overrides = await Descriptor.GetEnvironment(service.ServiceName, existing, discovery);
+
+                service.SetEnvironment(overrides);
+            }
         }
 
         protected virtual async Task WaitForListeningPorts(IReadOnlyList<Uri> listening)

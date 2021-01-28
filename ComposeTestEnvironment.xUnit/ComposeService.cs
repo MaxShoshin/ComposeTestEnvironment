@@ -45,5 +45,47 @@ namespace ComposeTestEnvironment.xUnit
 
             PortMappings = portMapping;
         }
+
+        public void SetEnvironment(IReadOnlyDictionary<string,string> environment)
+        {
+            _serviceDefinition.Children.Remove("environment");
+
+            if (!environment.Any())
+            {
+                return;
+            }
+
+            _serviceDefinition.Children.Add(
+                "environment",
+                new YamlMappingNode(environment.Select(x => new KeyValuePair<YamlNode, YamlNode>(
+                                                           new YamlScalarNode(x.Key),
+                                                           new YamlScalarNode(x.Value)))));
+        }
+
+        public IReadOnlyDictionary<string, string> GetEnvironment()
+        {
+            if (!_serviceDefinition.Children.TryGetValue("environment", out var environment))
+            {
+                return new Dictionary<string, string>();
+            }
+
+            switch (environment)
+            {
+                case YamlMappingNode map:
+                    // environment:
+                    // RACK_ENV: development
+                    return map.Children.ToDictionary(x => x.Key.ToString(), x => x.Value.ToString());
+
+                case YamlSequenceNode sequence:
+                    // environment:
+                    // - RACK_ENV=development
+                    return sequence.Children
+                        .Select(x => x.ToString().Trim().Split(new[] {'='}, StringSplitOptions.RemoveEmptyEntries))
+                        .ToDictionary(x => x[0], x => x[1]);
+
+                default:
+                    throw new InvalidOperationException($"Unexpected node type {environment.GetType().Name} for 'environment' node.");
+            }
+        }
     }
 }
