@@ -14,7 +14,14 @@ namespace ComposeTestEnvironment.xUnit
 
             var inspectImage = await client.Images.InspectImageAsync(image).ConfigureAwait(false);
 
-            return inspectImage.Config.ExposedPorts.Keys
+            var exposedPorts = inspectImage.Config.ExposedPorts;
+
+            if (exposedPorts == null)
+            {
+                return Array.Empty<(ushort PortNumber, string Protocol)>();
+            }
+
+            return exposedPorts.Keys
                 .Select(ParsePort)
                 .ToList();
         }
