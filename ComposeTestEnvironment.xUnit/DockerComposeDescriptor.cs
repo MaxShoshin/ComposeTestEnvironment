@@ -64,6 +64,11 @@ namespace ComposeTestEnvironment.xUnit
         public abstract IReadOnlyDictionary<string, int[]> Ports { get; }
 
         /// <summary>
+        /// Do not wait on these ports.
+        /// </summary>
+        public virtual IReadOnlyDictionary<string, int[]> IgnoreWaitForPortListening { get; } = new Dictionary<string, int[]>();
+
+        /// <summary>
         /// Custom implementation to wait until services ready.
         /// </summary>
         /// <param name="discovery">Current discovery.</param>

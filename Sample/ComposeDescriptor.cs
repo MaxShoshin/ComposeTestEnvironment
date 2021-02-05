@@ -17,7 +17,7 @@ namespace Sample
             // Specify all used in tests default service ports
             ["sqlserver"] = new[] {1433},
 
-            ["jaeger"] = new[] { 16686, 5778, 6831 },
+            ["jaeger"] = new[] { 16686, 5778 }, // Not used in tests, but specified for example
         };
 
         // Additional settings
@@ -31,6 +31,12 @@ namespace Sample
             // as port listening is not enough to detect correctly started server
             "has been set for engine and full-text services"
         };
+
+        // Override to False when you use different mechanisms to detect that all service are up and running
+        public override bool WaitForPortsListen => true;
+
+        // You can skip several ports from service started detection (for example this collection should contain udp only ports)
+        public override IReadOnlyDictionary<string, int[]> IgnoreWaitForPortListening { get; } = new Dictionary<string, int[]>();
 
         public override Task WaitForReady(Discovery discovery)
         {

@@ -98,7 +98,10 @@ namespace ComposeTestEnvironment.xUnit
                 if (Descriptor.WaitForPortsListen)
                 {
                     var listening = Descriptor.Ports
-                        .SelectMany(x => x.Value.Select(port => new UriBuilder("tcp://", x.Key, port).Uri))
+                        .SelectMany(x => x.Value.Select(port => new {Service = x.Key, Port = port}))
+                        .Where(x => !Descriptor.IgnoreWaitForPortListening.TryGetValue(x.Service, out var prohibitedPorts) ||
+                                    !prohibitedPorts.Contains(x.Port))
+                        .Select(x => new UriBuilder("tcp://", x.Service, x.Port).Uri)
                         .ToList();
 
                     await WaitForListeningPorts(listening).ConfigureAwait(false);
@@ -191,9 +194,12 @@ namespace ComposeTestEnvironment.xUnit
 
             if (Descriptor.WaitForPortsListen)
             {
-                var listening = portMappings.Values
-                    .SelectMany(x => x)
-                    .Where(x => string.IsNullOrEmpty(x.Protocol) || x.Protocol == "tcp")
+                var listening = portMappings
+                    .SelectMany(x => x.Value.Select(y => new {Service = x.Key, Port = y}))
+                    .Where(x => string.IsNullOrEmpty(x.Port.Protocol) || x.Port.Protocol == "tcp")
+                    .Where(x => !Descriptor.IgnoreWaitForPortListening.TryGetValue(x.Service, out var prohibitedPorts) ||
+                                !prohibitedPorts.Contains(x.Port.ExposedPort))
+                    .Select(x => x.Port)
                     .Select(x => new UriBuilder("tcp://", "localhost", x.PublicPort).Uri)
                     .ToList();
 

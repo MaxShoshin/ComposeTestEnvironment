@@ -108,6 +108,11 @@ will display docker container logs
 
 Override `DockerComposeDescriptor.DownOnComplete` property to return false.
 
+3. Failed to connect to container udp port via tcp protocool
+
+Sometimes docker images exposes udp ports. I don't know how to determine protocol of exposed port inside docker compose. In this
+case you can ignore wait for this specific port by overriding `DockerComposeDescriptor.IgnoreWaitForPortListening`
+
 ## Working modes:
 
 1. Run tests inside docker compose container
