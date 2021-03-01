@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Docker.DotNet;
+using Docker.DotNet.Models;
 
 namespace ComposeTestEnvironment.xUnit
 {
@@ -11,6 +12,14 @@ namespace ComposeTestEnvironment.xUnit
         public async Task<IReadOnlyList<(ushort PortNumber, string Protocol)>> GetExposedPortsAsync(string image)
         {
             var client = new DockerClientConfiguration().CreateClient();
+
+            await client.Images.CreateImageAsync(
+                new ImagesCreateParameters
+                {
+                    FromImage = image,
+                },
+                null,
+                new Progress<JSONMessage>());
 
             var inspectImage = await client.Images.InspectImageAsync(image).ConfigureAwait(false);
 
