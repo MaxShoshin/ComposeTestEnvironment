@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
 namespace ComposeTestEnvironment.xUnit
@@ -46,8 +48,10 @@ namespace ComposeTestEnvironment.xUnit
         {
             using var textWriter = new StreamWriter(tempStream);
 
+            FixBooleanValues(_doc);
+
             var yamlStream = new YamlStream(_doc);
-            yamlStream.Save(textWriter);
+            yamlStream.Save(textWriter, assignAnchors: false);
         }
 
         public void RemoveServices(IReadOnlyList<string> removingServices)
@@ -63,6 +67,19 @@ namespace ComposeTestEnvironment.xUnit
             var removingServiceNames = removingServices.ToHashSet();
 
             Services = Services.Where(item => !removingServiceNames.Contains(item.ServiceName)).ToList();
+        }
+
+
+        private void FixBooleanValues(YamlDocument doc)
+        {
+            foreach (var node in doc.AllNodes.OfType<YamlScalarNode>())
+            {
+                if (string.Equals(node.Value, "true", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(node.Value, "false", StringComparison.OrdinalIgnoreCase))
+                {
+                    node.Style = ScalarStyle.DoubleQuoted;
+                }
+            }
         }
     }
 }
