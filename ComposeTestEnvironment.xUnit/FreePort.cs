@@ -7,7 +7,7 @@ namespace ComposeTestEnvironment.xUnit
 {
     internal static class FreePort
     {
-        public const ushort DynamicPortStart = 49152;
+        public const ushort DynamicPortStart = 50560;
 
         public static IReadOnlyList<ushort> Rent(in int portCount)
         {

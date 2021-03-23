@@ -38,6 +38,8 @@ namespace ComposeTestEnvironment.xUnit
 
         protected TDescriptor Descriptor { get; } = new();
 
+        protected virtual ushort DynamicPortRangeStart { get; } = FreePort.DynamicPortStart;
+
         protected virtual ValueTask AfterInitializeAsync()
         {
             return default;
@@ -348,7 +350,7 @@ namespace ComposeTestEnvironment.xUnit
         {
             var docker = new DockerFacade();
 
-            var lastPort = FreePort.DynamicPortStart;
+            var lastPort = DynamicPortRangeStart;
 
             foreach (var service in composeFile.Services)
             {
