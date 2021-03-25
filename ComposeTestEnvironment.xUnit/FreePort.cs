@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.NetworkInformation;
 
 namespace ComposeTestEnvironment.xUnit
@@ -16,10 +17,23 @@ namespace ComposeTestEnvironment.xUnit
 
         public static IReadOnlyList<ushort> Rent(ushort startingPort, in int portCount)
         {
-            var properties = IPGlobalProperties.GetIPGlobalProperties();
+            var connections = Array.Empty<TcpConnectionInformation>();
+            var tcpEndPoints = Array.Empty<IPEndPoint>();
+            var udpEndPoints = Array.Empty<IPEndPoint>();
+            try
+            {
+                var properties = IPGlobalProperties.GetIPGlobalProperties();
 
-            // Ignore active connections
-            var connections = properties.GetActiveTcpConnections();
+                // Ignore active connections
+                connections = properties.GetActiveTcpConnections();
+                // Ignore active tcp listners
+                tcpEndPoints = properties.GetActiveTcpListeners();
+                // Ignore active UDP listeners
+                udpEndPoints = properties.GetActiveUdpListeners();
+            }
+            catch (PlatformNotSupportedException)
+            {
+            }
 
             var busyPorts = new HashSet<int>();
 
@@ -27,13 +41,10 @@ namespace ComposeTestEnvironment.xUnit
                                     .Where(connection => connection.LocalEndPoint.Port >= startingPort)
                                     .Select(connection => connection.LocalEndPoint.Port));
 
-            // Ignore active tcp listners
-            var endPoints = properties.GetActiveTcpListeners();
-            busyPorts.UnionWith(endPoints.Where(n => n.Port >= startingPort).Select(endPoint => endPoint.Port));
+            busyPorts.UnionWith(tcpEndPoints.Where(n => n.Port >= startingPort).Select(endPoint => endPoint.Port));
 
-            // Ignore active UDP listeners
-            endPoints = properties.GetActiveUdpListeners();
-            busyPorts.UnionWith(endPoints.Where(n => n.Port >= startingPort).Select(endPoint => endPoint.Port));
+
+            busyPorts.UnionWith(udpEndPoints.Where(n => n.Port >= startingPort).Select(endPoint => endPoint.Port));
 
             var availablePorts = new List<ushort>(portCount);
             for (var port = startingPort; port < ushort.MaxValue; port++)
