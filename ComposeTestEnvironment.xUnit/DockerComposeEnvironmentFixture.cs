@@ -222,7 +222,7 @@ namespace ComposeTestEnvironment.xUnit
 
             var discovery = new Discovery(
                 portMappings.ToDictionary(
-                    item => new HostSubstitution(item.Key, "localhost"),
+                    item => new HostSubstitution(item.Key, Descriptor.DockerHost),
                     item => (IReadOnlyList<PortSubstitution>)item.Value
                         .Select(port => new PortSubstitution(port.ExposedPort, port.PublicPort)).ToList()));
 

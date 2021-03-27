@@ -44,6 +44,12 @@ namespace ComposeTestEnvironment.xUnit
         public virtual bool GenerateImageBasedCompose { get; } = true;
 
         /// <summary>
+        /// By default docker runs all its containers locally, but it can run containers on different host.
+        /// This property allow to specify docker host.
+        /// </summary>
+        public virtual string DockerHost => "localhost";
+
+        /// <summary>
         /// docker-compose service names to remove from docker-compose file
         /// </summary>
         public virtual IReadOnlyList<string> ServicesToRemove { get; } = Array.Empty<string>();
