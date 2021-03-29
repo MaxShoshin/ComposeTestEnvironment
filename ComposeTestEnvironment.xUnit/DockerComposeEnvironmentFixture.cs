@@ -171,6 +171,11 @@ namespace ComposeTestEnvironment.xUnit
                 .Argument("up")
                 .CollectOutput(WriteMessage);
 
+            if (!Descriptor.GenerateImageBasedCompose)
+            {
+                process.Argument("--build");
+            }
+
             foreach (var message in Descriptor.StartedMessageMarkers)
             {
                 process.WaitForMessageInOutput(message);
