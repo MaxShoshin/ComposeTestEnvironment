@@ -27,6 +27,9 @@ namespace ComposeTestEnvironment.xUnit
 
                 exposedPorts = inspectImage.Config.ExposedPorts;
             }
+            catch (DockerApiException)
+            {
+            }
             catch (HttpRequestException)
             {
             }
