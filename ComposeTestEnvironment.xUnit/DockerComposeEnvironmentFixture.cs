@@ -38,8 +38,6 @@ namespace ComposeTestEnvironment.xUnit
 
         protected TDescriptor Descriptor { get; } = new();
 
-        protected virtual ushort DynamicPortRangeStart { get; } = FreePort.DynamicPortStart;
-
         protected virtual ValueTask AfterInitializeAsync()
         {
             return default;
@@ -55,7 +53,7 @@ namespace ComposeTestEnvironment.xUnit
             return default;
         }
 
-        protected virtual ValueTask AfterSingleTimeInitialize(Discovery discovery)
+        protected virtual ValueTask AfterSingleTimeInitialize(Discovery discovery, bool usedExistingEnvironment)
         {
             return default;
         }
@@ -68,6 +66,11 @@ namespace ComposeTestEnvironment.xUnit
         protected ValueTask RegisterGlobalDisposableAsync(IAsyncDisposable disposable)
         {
             return _disposables.AddAsync(disposable);
+        }
+
+        protected virtual Task<bool> IsEnvironmentUp(Discovery discovery)
+        {
+            return Task.FromResult(true);
         }
 
         async Task IAsyncLifetime.InitializeAsync()
@@ -95,6 +98,7 @@ namespace ComposeTestEnvironment.xUnit
             await BeforeSingleTimeInitialize().ConfigureAwait(false);
 
             Discovery discovery;
+            bool existingEnv = false;
             if (Descriptor.IsUnderCompose)
             {
                 if (Descriptor.WaitForPortsListen)
@@ -116,25 +120,34 @@ namespace ComposeTestEnvironment.xUnit
             }
             else
             {
-                discovery = await InitializeComposeEnvironmentAsync().ConfigureAwait(false);
+                (discovery, existingEnv) = await InitializeComposeEnvironmentAsync().ConfigureAwait(false);
             }
 
             await Descriptor.WaitForReady(discovery).ConfigureAwait(false);
 
-            await AfterSingleTimeInitialize(discovery).ConfigureAwait(false);
+            await AfterSingleTimeInitialize(discovery, existingEnv).ConfigureAwait(false);
 
             return discovery;
         }
 
-        private async Task<Discovery> InitializeComposeEnvironmentAsync()
+        private async Task<(Discovery Discovery, bool ExistingEnvironment)> InitializeComposeEnvironmentAsync()
         {
             using var composeFileStream = File.OpenRead(FindFile(Descriptor.ComposeFileName));
 
             var composeFile = ComposeFile.Parse(composeFileStream);
 
-            await AssignExposedPorts(composeFile).ConfigureAwait(false);
+            await AssignExposedPorts(composeFile, Descriptor.PortRenter).ConfigureAwait(false);
 
             var (discovery, portMappings) = PortMappings(composeFile);
+
+            if (Descriptor.TryFindExistingEnvironment)
+            {
+                if (await ArePortsOpened(portMappings).ConfigureAwait(false) &&
+                    await IsEnvironmentUp(discovery).ConfigureAwait(false))
+                {
+                    return (discovery, true);
+                }
+            }
 
             await ApplyEnvironmentChanges(composeFile, discovery);
 
@@ -199,21 +212,49 @@ namespace ComposeTestEnvironment.xUnit
                 throw new OperationCanceledException($"Timeout, docker output:\r\n {processOutput}", ex);
             }
 
+            await WaitForListeningPorts(portMappings);
+
+            return (discovery, false);
+        }
+
+        private async Task WaitForListeningPorts(Dictionary<string, IReadOnlyList<DockerPort>> portMappings)
+        {
             if (Descriptor.WaitForPortsListen)
             {
-                var listening = portMappings
-                    .SelectMany(x => x.Value.Select(y => new {Service = x.Key, Port = y}))
-                    .Where(x => string.IsNullOrEmpty(x.Port.Protocol) || x.Port.Protocol == "tcp")
-                    .Where(x => !Descriptor.IgnoreWaitForPortListening.TryGetValue(x.Service, out var prohibitedPorts) ||
-                                !prohibitedPorts.Contains(x.Port.ExposedPort))
-                    .Select(x => x.Port)
-                    .Select(x => new UriBuilder("tcp://", "localhost", x.PublicPort).Uri)
-                    .ToList();
+                using var cancellationTokenSource = new CancellationTokenSource(Descriptor.StartTimeout);
 
-                await WaitForListeningPorts(listening).ConfigureAwait(false);
+                var listening = GetListeningUrls(portMappings);
+
+                await Task.WhenAll(listening.Select(x => Connect(x, cancellationTokenSource.Token)));
+            }
+        }
+
+        private async Task<bool> ArePortsOpened(Dictionary<string, IReadOnlyList<DockerPort>> portMappings)
+        {
+            if (Descriptor.WaitForPortsListen)
+            {
+                using var cancellationTokenSource = new CancellationTokenSource(Descriptor.StartTimeout);
+
+                var listening = GetListeningUrls(portMappings);
+
+                var results = await Task.WhenAll(listening.Select(x => CanConnect(x, cancellationTokenSource.Token)))!;
+
+                return results.All(x => x);
             }
 
-            return discovery;
+            return true;
+        }
+
+        private List<Uri> GetListeningUrls(Dictionary<string, IReadOnlyList<DockerPort>> portMappings)
+        {
+            return portMappings
+                .SelectMany(x => x.Value.Select(y => new {Service = x.Key, Port = y}))
+                .Where(x => string.IsNullOrEmpty(x.Port.Protocol) || x.Port.Protocol == "tcp")
+                .Where(x => !Descriptor.IgnoreWaitForPortListening.TryGetValue(x.Service, out var prohibitedPorts) ||
+                            !prohibitedPorts.Contains(x.Port.ExposedPort))
+                .Select(x => x.Port)
+                .Select(x => new UriBuilder("tcp://", "localhost", x.PublicPort).Uri)
+                .ToList();
         }
 
         private (Discovery discovery, Dictionary<string, IReadOnlyList<DockerPort>> portMappings) PortMappings(
@@ -256,27 +297,15 @@ namespace ComposeTestEnvironment.xUnit
 
         private async Task Connect(Uri uri, CancellationToken cancellation)
         {
-            using var client = new TcpClient();
-
             try
             {
-                while (true)
+                while (!cancellation.IsCancellationRequested)
                 {
-                    try
-                    {
-#if NET5_0
-                        await client.ConnectAsync(uri.Host, uri.Port, cancellation).ConfigureAwait(false);
-#else
-                        await client.ConnectAsync(uri.Host, uri.Port).ConfigureAwait(false);
-#endif
+                    var canConnect = await CanConnect(uri, cancellation).ConfigureAwait(false);
 
-                        if (client.Connected)
-                        {
-                            return;
-                        }
-                    }
-                    catch (SocketException)
+                    if (canConnect)
                     {
+                        return;
                     }
 
                     await Task.Delay(TimeSpan.FromMilliseconds(50), cancellation).ConfigureAwait(false);
@@ -286,6 +315,30 @@ namespace ComposeTestEnvironment.xUnit
             {
                 throw new OperationCanceledException($"Unable to connect to {uri}", ex);
             }
+        }
+
+        private async Task<bool> CanConnect(Uri uri, CancellationToken cancellation)
+        {
+            using var client = new TcpClient();
+
+            try
+            {
+#if NET5_0
+                        await client.ConnectAsync(uri.Host, uri.Port, cancellation).ConfigureAwait(false);
+#else
+                await client.ConnectAsync(uri.Host, uri.Port).ConfigureAwait(false);
+#endif
+
+                if (client.Connected)
+                {
+                    return true;
+                }
+            }
+            catch (SocketException)
+            {
+            }
+
+            return false;
         }
 
         private ProcessHelper ComposeDown(string composeFile, string projectName)
@@ -351,11 +404,9 @@ namespace ComposeTestEnvironment.xUnit
             return generatedComposeFile;
         }
 
-        private async Task AssignExposedPorts(ComposeFile composeFile)
+        private async Task AssignExposedPorts(ComposeFile composeFile, IPortRenter portRenter)
         {
             var docker = new DockerFacade();
-
-            var lastPort = DynamicPortRangeStart;
 
             foreach (var service in composeFile.Services)
             {
@@ -371,8 +422,7 @@ namespace ComposeTestEnvironment.xUnit
 
                 var imageExposedPorts = await docker.GetExposedPortsAsync(service.Image).ConfigureAwait(false);
 
-                var publicPorts = FreePort.Rent(lastPort, discoveryPorts.Length);
-                lastPort = (ushort)(publicPorts.Max() + 1);
+                var publicPorts = portRenter.Rent(service.ServiceName, discoveryPorts.Length);
 
                 var portMapping = discoveryPorts
                     .Select((port, index) =>

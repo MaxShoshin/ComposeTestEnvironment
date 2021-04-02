@@ -6,6 +6,8 @@ namespace ComposeTestEnvironment.xUnit
 {
     public abstract class DockerComposeDescriptor
     {
+        private IPortRenter? _portRenter;
+
         /// <summary>
         /// Detect run type (under docker-compose or from ide/command line)
         /// </summary>
@@ -50,6 +52,22 @@ namespace ComposeTestEnvironment.xUnit
         public virtual string DockerHost => "localhost";
 
         /// <summary>
+        /// Component to get ports for assigning to container ports.
+        /// </summary>
+        public virtual IPortRenter PortRenter
+        {
+            get
+            {
+                if (_portRenter == null)
+                {
+                    _portRenter = TryFindExistingEnvironment ? new SerialPortRenter(FreePort.DynamicPortStart) : new FreePortRenter(FreePort.DynamicPortStart);
+                }
+
+                return _portRenter;
+            }
+        }
+
+        /// <summary>
         /// docker-compose service names to remove from docker-compose file
         /// </summary>
         public virtual IReadOnlyList<string> ServicesToRemove { get; } = Array.Empty<string>();
@@ -63,6 +81,13 @@ namespace ComposeTestEnvironment.xUnit
         /// Services are ready to process requests when `Ports` are listened
         /// </summary>
         public virtual bool WaitForPortsListen { get; } = true;
+
+        /// <summary>
+        /// Try to find existing environment (if environment already exists - use it instead up new environment).
+        ///
+        /// See PortRenter and DownOnComplete.
+        /// </summary>
+        public virtual bool TryFindExistingEnvironment { get; } = false;
 
         /// <summary>
         /// Default ports by services.
