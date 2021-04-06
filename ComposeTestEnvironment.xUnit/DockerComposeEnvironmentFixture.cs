@@ -253,7 +253,7 @@ namespace ComposeTestEnvironment.xUnit
                 .Where(x => !Descriptor.IgnoreWaitForPortListening.TryGetValue(x.Service, out var prohibitedPorts) ||
                             !prohibitedPorts.Contains(x.Port.ExposedPort))
                 .Select(x => x.Port)
-                .Select(x => new UriBuilder("tcp://", "localhost", x.PublicPort).Uri)
+                .Select(x => new UriBuilder("tcp://", Descriptor.DockerHost, x.PublicPort).Uri)
                 .ToList();
         }
 
