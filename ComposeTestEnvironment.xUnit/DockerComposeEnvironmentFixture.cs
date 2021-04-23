@@ -295,6 +295,13 @@ namespace ComposeTestEnvironment.xUnit
             await Task.WhenAll(tasks).ConfigureAwait(false);
         }
 
+        protected virtual void WriteMessage(string message)
+        {
+            _outputStrings.Add(message);
+
+            _output.OnMessage(new DiagnosticMessage(message));
+        }
+
         private async Task Connect(Uri uri, CancellationToken cancellation)
         {
             try
@@ -361,13 +368,6 @@ namespace ComposeTestEnvironment.xUnit
                 .Argument("pull")
                 .CollectOutput(line => WriteMessage("pull: " + line));
             return downProcess;
-        }
-
-        private void WriteMessage(string message)
-        {
-            _outputStrings.Add(message);
-
-            _output.OnMessage(new DiagnosticMessage(message));
         }
 
         private string GenerateComposeFileWithExposedPorts(ComposeFile composeFile)
