@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
@@ -48,7 +49,7 @@ namespace ComposeTestEnvironment.xUnit
         {
             using var textWriter = new StreamWriter(tempStream);
 
-            FixBooleanValues(_doc);
+            QuoteValues(_doc);
 
             var yamlStream = new YamlStream(_doc);
             yamlStream.Save(textWriter, assignAnchors: false);
@@ -70,15 +71,23 @@ namespace ComposeTestEnvironment.xUnit
         }
 
 
-        private void FixBooleanValues(YamlDocument doc)
+        private void QuoteValues(YamlDocument doc)
         {
             foreach (var node in doc.AllNodes.OfType<YamlScalarNode>())
             {
-                if (string.Equals(node.Value, "true", StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(node.Value, "false", StringComparison.OrdinalIgnoreCase))
+                if (node.Style == ScalarStyle.DoubleQuoted || node.Style == ScalarStyle.SingleQuoted ||
+                    node.Value == null)
                 {
-                    node.Style = ScalarStyle.DoubleQuoted;
+                    continue;
                 }
+
+                // Don't quote numbers
+                if (double.TryParse(node.Value, out _))
+                {
+                    continue;
+                }
+
+                node.Style = ScalarStyle.DoubleQuoted;
             }
         }
     }
