@@ -52,6 +52,11 @@ namespace ComposeTestEnvironment.xUnit
         public virtual string DockerHost => "localhost";
 
         /// <summary>
+        /// true for external docker compose setup/terdown
+        /// </summary>
+        public virtual bool IsExternalCompose => false;
+
+        /// <summary>
         /// Component to get ports for assigning to container ports.
         /// </summary>
         public virtual IPortRenter PortRenter

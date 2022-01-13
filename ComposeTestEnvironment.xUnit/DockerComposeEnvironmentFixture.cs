@@ -118,6 +118,25 @@ namespace ComposeTestEnvironment.xUnit
                         item => new HostSubstitution(item.Key, item.Key),
                         item => (IReadOnlyList<PortSubstitution>)item.Value.Select(port => new PortSubstitution(port, port)).ToList()));
             }
+            else if (Descriptor.IsExternalCompose)
+            {
+                if (Descriptor.WaitForPortsListen)
+                {
+                    var listening = Descriptor.Ports
+                        .SelectMany(x => x.Value.Select(port => new {Service = x.Key, Port = port}))
+                        .Where(x => !Descriptor.IgnoreWaitForPortListening.TryGetValue(x.Service, out var prohibitedPorts) ||
+                                    !prohibitedPorts.Contains(x.Port))
+                        .Select(x => new UriBuilder("tcp://", Descriptor.DockerHost, x.Port).Uri)
+                        .ToList();
+
+                    await WaitForListeningPorts(listening).ConfigureAwait(false);
+                }
+
+                discovery = new Discovery(
+                    Descriptor.Ports.ToDictionary(
+                        item => new HostSubstitution(item.Key, Descriptor.DockerHost),
+                        item => (IReadOnlyList<PortSubstitution>)item.Value.Select(port => new PortSubstitution(port, port)).ToList()));
+            }
             else
             {
                 (discovery, existingEnv) = await InitializeComposeEnvironmentAsync().ConfigureAwait(false);
