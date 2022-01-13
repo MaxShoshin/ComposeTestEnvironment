@@ -95,6 +95,8 @@ namespace ComposeTestEnvironment.xUnit
 
         private async Task<Discovery> InitializeCoreAsync()
         {
+            TestFramework.RegisterDisposable(_disposables);
+
             await BeforeSingleTimeInitialize().ConfigureAwait(false);
 
             Discovery discovery;
@@ -172,7 +174,6 @@ namespace ComposeTestEnvironment.xUnit
 
             var generatedFilePath = GenerateComposeFileWithExposedPorts(composeFile);
             var projectName = Descriptor.ProjectName;
-            TestFramework.RegisterDisposable(_disposables);
 
             if (Descriptor.DownOnComplete)
             {
