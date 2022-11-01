@@ -13,6 +13,7 @@ ProjectSection(SolutionItems) = preProject
 	LICENSE = LICENSE
 	.github\workflows\publishNuget.yml = .github\workflows\publishNuget.yml
 	.github\workflows\build.yml = .github\workflows\build.yml
+	global.json = global.json
 EndProjectSection
 EndProject
 Global

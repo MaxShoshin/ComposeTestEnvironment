@@ -23,7 +23,7 @@ namespace ComposeTestEnvironment.xUnit
         /// docker-compose project name.
         /// </summary>
         public virtual string ProjectName
-            => GetType().Assembly?.GetName().Name.ToLowerInvariant() ?? throw new NotSupportedException($"Null assembly is not supported (typeof({GetType().Name}).Assembly)");
+            => (GetType().Assembly.GetName().Name?.ToLowerInvariant()) ?? throw new NotSupportedException($"Null assembly is not supported (typeof({GetType().Name}).Assembly)");
 
         /// <summary>
         /// Timeout to start environment.
